@@ -32,6 +32,13 @@ server.use(express.json());
 server.use(cors());
 server.use(helmet());
 server.use(session(sessionConfig));
+server.use('/api/restricted/*', function (req, res, next ) {
+  if (req.session && req.session.user) {
+    next()
+  } else {
+    res.status(401).json({ message: "Not authenticated" })
+  }
+})
 
 server.post("/api/register", (req, res) => {
   const creds = req.body;
@@ -110,6 +117,59 @@ server.get("/api/logout", (req, res) => {
   } else {
     res.json({ message: "You are already logged out" });
   }
+});
+
+/////////////////////
+
+server.get("/api/restricted/something", (req, res) => {
+  db("users")
+    .select("id")
+    .then(users => {
+      if (users) {
+        res.status(200).json(users);
+      } else {
+        res.status(401).json({ message: "You shall not pass!" });
+      }
+    })
+    .catch(err =>
+      res
+        .status(500)
+        .json({ error: "User information could not be retrieved." })
+    );
+});
+
+server.get("/api/restricted/other", (req, res) => {
+  db("users")
+    .select("username")
+    .then(users => {
+      if (users) {
+        res.status(200).json(users);
+      } else {
+        res.status(401).json({ message: "You shall not pass!" });
+      }
+    })
+    .catch(err =>
+      res
+        .status(500)
+        .json({ error: "User information could not be retrieved." })
+    );
+});
+
+server.get("/api/restricted/a", (req, res) => {
+  db("users")
+    .select("password")
+    .then(users => {
+      if (users) {
+        res.status(200).json(users);
+      } else {
+        res.status(401).json({ message: "You shall not pass!" });
+      }
+    })
+    .catch(err =>
+      res
+        .status(500)
+        .json({ error: "User information could not be retrieved." })
+    );
 });
 
 module.exports = server;
